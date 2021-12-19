@@ -15,7 +15,7 @@ PORT = 8080
 if __name__ == '__main__':
     server = WebSocketServer(HOST, PORT, WebSocketHandler)
     print()
-    print("Starting websocket server on port {HOST}:{PORT}")
+    print(f"Starting websocket server on port {HOST}:{PORT}")
     print()
     print()
     print("Press Ctrl-C to quit.")
