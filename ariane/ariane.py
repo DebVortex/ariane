@@ -2,41 +2,38 @@ from io import BytesIO
 import json
 
 from PIL import Image
-from websocket import WebSocketApp
 import numpy as np
 
-from ariane.modules.eyes import Eyes
-from ariane.modules.mouth import Mouth
+from simple_websocket_server import WebSocket
 
-class Ariane:
 
-    def __init__(self) -> None:
-        self.eyes = Eyes()
-        self.mouth = Mouth()
-        self.ws = WebSocketApp(
-            'ws://localhost:3001',
-            on_message=self.on_message,
-            on_error=self.on_error,
-            on_close=self.on_close
-        )
-        self.ws.on_open = self.on_open
+from modules.eyes import Eyes
+from modules.mouth import Mouth
 
-    def run(self) -> None:
-        self.ws.run_forever()
 
-    def on_open(self) -> None:
-        print("INFO: Connection establisted.")
+class WebSocketHandler(WebSocket):
 
-    def on_close(self) -> None:
-        print("INFO: Connection closed.")
+    def __init__(self, *args: list, **kwargs: dict) -> None:
+        self.ariane = Ariane()
+        super().__init__(*args, **kwargs)
 
-    def on_error(self, err) -> None:
-        print("ERROR: ", err)
+    def connected(self) -> None:
+        print(self.address, 'connected')
 
-    def on_message(self, buff) -> None:
+    def handle_close(self) -> None:
+        print(self.address, 'closed')
+
+    def handle(self, buff) -> None:
         stream = BytesIO(buff)
         img = Image.open(stream).convert("RGB")
         img_array = np.array(img, dtype=np.uint8)
-        persons = self.eyes.handle(img_array)
+        persons = self.ariane.eyes.handle(img_array)
         print('INFO: sending persons ', persons)
         self.ws.send(json.dumps(persons))
+
+
+class Ariane:
+
+    def __init__(self, host="", port=8080) -> None:
+        self.eyes = Eyes()
+        self.mouth = Mouth()

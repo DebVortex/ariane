@@ -1,5 +1,7 @@
 import face_recognition
 
+import typing
+
 import glob
 
 from PIL import Image
